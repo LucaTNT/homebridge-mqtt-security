@@ -147,8 +147,8 @@ function MQTTSecuritySystemAccessory(log, config) {
 		};
 		if (status !== null){
 			self.readstate = status;
-			self.securityService.getCharacteristic(Characteristic.SecuritySystemCurrentState, self.readstate);
 			self.log("HomeKit received state=", self.readstate);
+			self.securityService.getCharacteristic(Characteristic.SecuritySystemTargetState).setValue(self.readstate, undefined, "DONTPUBLISH");
 		};
 	});
 	this.client.subscribe(this.state_topic);
@@ -156,7 +156,8 @@ function MQTTSecuritySystemAccessory(log, config) {
 
 MQTTSecuritySystemAccessory.prototype = {
 
-	setTargetState: function(state, callback) {
+	setTargetState: function(state, callback, context) {
+		this.log("Setting state to %s", state, "from context", context);
 		var self = this;
 		switch (state) {
 			case Characteristic.SecuritySystemTargetState.STAY_ARM:
@@ -172,8 +173,11 @@ MQTTSecuritySystemAccessory.prototype = {
 				mqttstate = this.command_payload_off;
 				break;
 		};
-		// MQTT Publish state   
-		this.client.publish(this.command_topic, mqttstate);
+		if (context !== "DONTPUBLISH")
+		{
+			// MQTT Publish state
+			this.client.publish(this.command_topic, mqttstate);
+		}
 		self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
 		callback(null, state);
 	},
