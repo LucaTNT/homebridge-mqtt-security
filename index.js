@@ -112,14 +112,14 @@ function MQTTSecuritySystemAccessory(log, config) {
 	});
 
 	// Set initial state to disarmed
-	console.log("Setting initial HomeKit state to disarmed");
+	this.log("Setting initial HomeKit state to disarmed");
 	that.readstate = Characteristic.SecuritySystemCurrentState.DISARMED;
 
 
 	self = this;
 	this.client.on('message', function (topic, message) {
 		var status = message.toString();
-		console.log("MQTT state message received:", status);
+		self.log("MQTT state message received:", status);
 		switch (status) {
 			case self.state_payload_home:
 				// STAY_ARM = 0
@@ -147,8 +147,8 @@ function MQTTSecuritySystemAccessory(log, config) {
 		};
 		if (status !== null){
 			self.readstate = status;
-			console.log("HomeKit received state=",self.readstate);
 			self.securityService.getCharacteristic(Characteristic.SecuritySystemCurrentState, self.readstate);
+			self.log("HomeKit received state=", self.readstate);
 		};
 	});
 	this.client.subscribe(this.state_topic);
@@ -157,7 +157,6 @@ function MQTTSecuritySystemAccessory(log, config) {
 MQTTSecuritySystemAccessory.prototype = {
 
 	setTargetState: function(state, callback) {
-		this.log("Setting state to %s", state);
 		var self = this;
 		switch (state) {
 			case Characteristic.SecuritySystemTargetState.STAY_ARM:
